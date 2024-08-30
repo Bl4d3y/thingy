@@ -1,0 +1,7 @@
+Flask
+requests
+beautifulsoup4
+flask_sockets
+SQLAlchemy
+supabase
+psycopg2-binary
