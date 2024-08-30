@@ -2,29 +2,30 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-ban_requests = []
+commands_queue = []
 
 @app.route('/kickban', methods=['POST'])
 def kickban():
-    data = request.json
-    
-    if "userId" not in data or "action" not in data or "reason" not in data:
-        return jsonify({"error": "Invalid input"}), 400
-    
-    ban_requests.append({
-        "userId": data['userId'],
-        "action": data['action'],
-        "reason": data['reason']
-    })
-    
-    return jsonify({"status": "Request received"}), 200
+    data = request.get_json()
+
+    user_id = data.get('userId')
+    action = data.get('action')
+    reason = data.get('reason', '')
+
+    if not user_id or not action:
+        return jsonify({'error': 'Invalid data'}), 400
+
+    commands_queue.append(data)
+
+    return jsonify({'message': f'{action.capitalize()} action received for user {user_id}'}), 200
 
 @app.route('/kickban', methods=['GET'])
-def get_kickban_requests():
-    if ban_requests:
-        return jsonify(ban_requests.pop(0))
+def process_command():
+    if commands_queue:
+        command = commands_queue.pop(0)
+        return jsonify(command), 200
     else:
-        return jsonify({"status": "No pending requests"}), 200
+        return jsonify({'message': 'No commands to process'}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=5000)
